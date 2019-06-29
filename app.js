@@ -10,11 +10,11 @@ app.get('/', function(req, res) {
 io.sockets.on('connection', function(socket) {
     socket.on('username', function(username) {
         socket.username = username;
-        io.emit('is_online', '🔵 <i>' + socket.username + ' join the chat..</i>');
+        io.emit('is_online', ' <i>' + socket.username + ' joined the chat..</i>');
     });
 
     socket.on('disconnect', function(username) {
-        io.emit('is_online', '🔴 <i>' + socket.username + ' left the chat..</i>');
+        io.emit('is_online', ' <i>' + socket.username + ' left the chat..</i>');
     })
 
     socket.on('chat_message', function(message) {
@@ -23,6 +23,6 @@ io.sockets.on('connection', function(socket) {
 
 });
 
-const server = http.listen(8080, function() {
-    console.log('listening on *:8080');
+const server = http.listen(7000, function() {
+    console.log('listening on *:7000');
 });
