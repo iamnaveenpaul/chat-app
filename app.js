@@ -2,6 +2,18 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const mongoose = require('mongoose');
+const ConversationClass = require('./controllers/conversation.js');
+const conversationObj = new ConversationClass();
+
+mongoose.connect("mongodb://localhost/chat-app?poolSize=100",{ useNewUrlParser: true },function(error){
+    if(error){
+        console.log("MongoDb connection failed");
+        console.log(error);
+    } else {
+        console.log("MongoDb connection successful");
+    }
+});
 
 app.get('/', function(req, res) {
     res.render('index.ejs');
@@ -18,6 +30,12 @@ io.sockets.on('connection', function(socket) {
     })
 
     socket.on('chat_message', function(message) {
+        conversationObj.storeConversation({
+            userName:socket.username,
+            text:message
+        },function(err,result){
+
+        });
         io.emit('chat_message', '<strong>' + socket.username + '</strong>: ' + message);
     });
 
