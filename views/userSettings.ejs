@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Edit user</title>
+      
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  </head>
+  <body>
+    
+    <input id="userName" placeholder="edit username..." />
+
+    <input id="fullName" placeholder="enter full Name..." />
+    
+    <input id="emailId" placeholder="enter emailId..." />
+
+    <input id="password" placeholder="enter password..." />
+    
+    <button>Save</button>
+    <script>
+
+            // submit text message without reload/refresh the page
+
+            $("button").click(function(e){
+                var userName = $('#userName').val();
+                var fullName = $('#fullName').val();
+                var emailId = $('#emailId').val();
+                var password = $('#password').val();
+
+                console.log(userName,fullName,emailId,password);
+
+                var obj = {
+                  userName: userName,
+                  fullName: fullName,
+                  emailId: emailId,
+                  password: password,
+                }
+
+                $.ajax({
+                  url: '/save/username', 
+                  type: 'POST', 
+                  contentType: 'application/json', 
+                  data: JSON.stringify(obj)
+                })
+            });
+
+    </script>
+  </body>
+</html>

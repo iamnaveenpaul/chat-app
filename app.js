@@ -8,6 +8,12 @@ var bodyParser = require('body-parser');
 const ConversationClass = require('./controllers/conversation.js');
 const conversationObj = new ConversationClass();
 
+const UserClass = require('./controllers/user.js');
+const userObj = new UserClass();
+
+const UserConversation = require('./controllers/userConversation');
+const userConvObj = new UserConversation();
+
 mongoose.connect("mongodb://localhost/chat-app?poolSize=100",{ useNewUrlParser: true },function(error){
     if(error){
         console.log("MongoDb connection failed");
@@ -18,6 +24,7 @@ mongoose.connect("mongodb://localhost/chat-app?poolSize=100",{ useNewUrlParser: 
 });
 
 app.use(bodyParser.json());
+app.use(userObj.checkUserNameExists);
 
 app.get('/', function(req, res) {
     res.render('index.ejs');
@@ -30,7 +37,39 @@ app.get('/edit/username', function(req, res) {
 app.post('/save/username', function(req, res) {
     console.log(req.body);
 
-    res.send(req.body)
+    userObj.storeUser(req.body,function(err,result){
+        res.send({
+            err:err,
+            result:result
+        })
+    });
+});
+
+app.get('/get/messages/analytics/v4', function(req, res) {
+    userConvObj.getAnalytics(function(err,results){
+        res.send({
+            err:err,
+            results:results
+        })
+    })
+});
+
+app.get('/get/messages/analytics/v5', function(req, res) {
+    userConvObj.getHashmaps(function(err,results){
+        res.send({
+            err:err,
+            results:results
+        })
+    })
+});
+
+app.get('/get/messages/analytics/v6', function(req, res) {
+    userConvObj.getAnalyticsUsingOnlyLoops(function(err,results){
+        res.send({
+            err:err,
+            results:results
+        })
+    })
 });
 
 app.get('/get/messages/analytics', function(req, res) {
