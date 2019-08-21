@@ -23,6 +23,19 @@ User.prototype.storeUser = function(data,callback){
 
 }
 
+User.prototype.findUserByUserNameAndPassword = function(data,callback){
+    UserCollection
+    .findOne({userName:data.userName})
+    .lean()
+    .exec(function(err,user){
+        if(user && user.userName){
+            callback(err,user)
+        } else {
+            callback(err,null)
+        }
+    })
+};
+
 User.prototype.checkUserNameExists = checkUserNameExists;
 
 
@@ -41,7 +54,7 @@ function checkUserNameExists(req, res, next){
         })
     } else {
         next();
-        console.log("No params found for querying");
+        // console.log("No params found for querying");
     }
 }
 

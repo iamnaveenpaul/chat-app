@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Edit user</title>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+  </head>
+  <body>
+    
+    <input id="userName" placeholder="edit username..." />
+
+    <input id="password" placeholder="enter password..." />
+    
+    <button>Login</button>
+    <script>
+
+      $("button").click(function(e){
+          var userName = $('#userName').val();
+          var password = $('#password').val();
+
+          var obj = {
+            userName: userName,
+            password: password,
+          }
+
+          $.ajax({
+            url: '/login/user', 
+            type: 'POST', 
+            contentType: 'application/json', 
+            data: JSON.stringify(obj),
+            success: function(response){
+              window.location.assign('/?userName='+response);
+          }
+        })
+      });
+    </script>
+  </body>
+</html>

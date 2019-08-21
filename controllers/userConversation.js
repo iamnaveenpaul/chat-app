@@ -1,5 +1,10 @@
 var UserCollection = require('../models/user').user;
 var ConversationCollection = require('../models/conversation').conversation;
+var GithubCollection = require('../models/github').github;
+
+var http = require('https');
+var request = require('request');
+
 
 function UserConveration() {};
 
@@ -23,6 +28,30 @@ UserConveration.prototype.getAnalyticsUsingOnlyLoops = function(callback){
             });
         })
     })
+}
+
+UserConveration.prototype.downloadGithubUsers = function(callback){
+
+    var options = {
+        host: 'api.github.com',
+        path: 'https://api.github.com/users',
+        method: 'GET',
+        headers: {'user-agent': 'node.js'}
+        };
+        
+        var request = http.request(options, function(response){
+            var body = '';
+            response.on("data", function(chunk){
+                body += chunk.toString('utf8');
+            });
+            
+            response.on("end", function(){
+                callback(body);
+                });
+            });
+            
+            request.end();
+
 }
 
 UserConveration.prototype.getHashmaps = function(callback){

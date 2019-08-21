@@ -5,6 +5,9 @@ const io = require('socket.io')(http);
 const mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 
+var session = require('express-session');
+var cookieParser = require('cookie-parser');
+
 const ConversationClass = require('./controllers/conversation.js');
 const conversationObj = new ConversationClass();
 
@@ -26,12 +29,76 @@ mongoose.connect("mongodb://localhost/chat-app?poolSize=100",{ useNewUrlParser: 
 app.use(bodyParser.json());
 app.use(userObj.checkUserNameExists);
 
-app.get('/', function(req, res) {
+app.use(cookieParser());
+
+var sessionMiddleware = session({
+    key: 'user_sid',
+    secret: 'asecretkey',
+    resave: true,
+    saveUninitialized: true
+});
+
+app.use(sessionMiddleware);
+
+io.use(function(socket,next){
+    sessionMiddleware(socket.request,socket.request.res,next)
+});
+
+app.post('/login/user', function(req, res) {
+    
+    userObj.findUserByUserNameAndPassword(req.body,function(err,user){
+        if(!err && user){
+            req.session.user = user.userName;
+            res.send(user.userName);
+        } else {
+            res.send("Username and password did not match");
+        }
+        
+    })
+});
+
+function checkSession(req, res, next) {
+    if (req.session && req.session.user) {
+      return next();
+    } else {
+      var err = new Error('You must be logged in to view this page.');
+      err.status = 401;
+      return next(err);
+    }
+}
+  
+app.get('/logout', function(req, res, next) {
+    if (req.session) {
+      // delete session object
+      req.session.destroy(function(err) {
+        if(err) {
+          return next(err);
+        } else {
+          return res.redirect('/');
+        }
+      });
+    }
+  });
+
+app.get('/',checkSession, function(req, res) {
     res.render('index.ejs');
 });
 
 app.get('/edit/username', function(req, res) {
     res.render('userSettings.ejs');
+});
+
+app.get('/login/form', function(req, res) {
+    res.render('login.ejs');
+});
+
+app.get('/download/github/users',checkSession, function(req, res) {
+    userConvObj.downloadGithubUsers(function(err,results){
+        res.send({
+            err:err,
+            results:results
+        })
+    }) 
 });
 
 app.post('/save/username', function(req, res) {
@@ -228,15 +295,13 @@ app.post('/update/username', function(req, res) {
     var existingUserName = req.body.existingUserName;
     var newUserName = req.body.newUserName;
 
-    console.log(req.query);
-    console.log(req.body);
-
     conversationObj.updateUserName(existingUserName,newUserName,function(err,data){
         res.send(data);
     })
 });
 
 io.sockets.on('connection', function(socket) {
+    console.log(socket.request.session.user)
     socket.on('username', function(username) {
         socket.username = username;
         io.emit('is_online', ' <i>' + socket.username + ' joined the chat..</i>');
