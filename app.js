@@ -4,9 +4,13 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const mongoose = require('mongoose');
 var bodyParser = require('body-parser');
-
-var session = require('express-session');
 var cookieParser = require('cookie-parser');
+var session = require('express-session');
+
+var redis   = require("redis");
+var client  = redis.createClient();
+
+var RedisStore = require('connect-redis')(session);
 
 const ConversationClass = require('./controllers/conversation.js');
 const conversationObj = new ConversationClass();
@@ -32,6 +36,7 @@ app.use(userObj.checkUserNameExists);
 app.use(cookieParser());
 
 var sessionMiddleware = session({
+    store:new RedisStore({ host: 'localhost', port: 6379, client: client,ttl :  3600}),
     key: 'user_sid',
     secret: 'asecretkey',
     resave: true,
@@ -44,11 +49,20 @@ io.use(function(socket,next){
     sessionMiddleware(socket.request,socket.request.res,next)
 });
 
+app.get('/get/cache', function(req, res) {
+    getCache(req.query.key,function(data){
+        res.send(data);
+    })
+});
+
 app.post('/login/user', function(req, res) {
     
     userObj.findUserByUserNameAndPassword(req.body,function(err,user){
         if(!err && user){
             req.session.user = user.userName;
+
+            setCache(user.userName,user);
+
             res.send(user.userName);
         } else {
             res.send("Username and password did not match");
@@ -56,6 +70,21 @@ app.post('/login/user', function(req, res) {
         
     })
 });
+
+function setCache(key,data){
+    client.setex(key, 3600, JSON.stringify(data));
+}
+
+function getCache(key,callback){
+    client.get(key, function (error, result) {
+        try {
+            var data = JSON.parse(result);
+            callback(data)
+        } catch (err) {
+            callback(null)
+        }
+    });
+}
 
 function checkSession(req, res, next) {
     if (req.session && req.session.user) {
@@ -113,11 +142,27 @@ app.post('/save/username', function(req, res) {
 });
 
 app.get('/get/messages/analytics/v4', function(req, res) {
-    userConvObj.getAnalytics(function(err,results){
+
+    // client.del("");
+    
+    getCache("cache",function(data){
+      if(data){
         res.send({
             err:err,
-            results:results
+            results:data
         })
+      } else {
+
+        userConvObj.getAnalytics(function(err,results){
+
+            setCache("cache",results);
+    
+            res.send({
+                err:err,
+                results:results
+            })
+        })
+      }   
     })
 });
 
