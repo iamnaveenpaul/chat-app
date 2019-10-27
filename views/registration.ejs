@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Register user</title>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  </head>
+  <body>
+    <input id="userName" placeholder="edit username..." />
+    <input id="fullName" placeholder="enter full Name..." />
+    <input id="emailId" placeholder="enter emailId..." />
+    <input id="password" placeholder="enter password..." />
+    <button>Register</button>
+    <script>
+            $("button").click(function(e){
+                // console.log(e);
+                var userName = $('#userName').val();
+                var fullName = $('#fullName').val();
+                var emailId = $('#emailId').val();
+                var password = $('#password').val();
+                var obj = {
+                  userName: userName,
+                  fullName: fullName,
+                  emailId: emailId,
+                  password: password,
+                }
+                console.log(obj);
+                $.ajax({
+                  url: '/register/user', 
+                  type: 'POST', 
+                  contentType: 'application/json', 
+                  data: JSON.stringify(obj)
+                })
+            });
+    </script>
+  </body>
+</html>
